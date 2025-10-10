@@ -15,7 +15,6 @@
 export interface TripDataPoint {
   id: number;
   distance: number;
-  fare: number;
   duration: number;
   speed: number;
 }
@@ -23,7 +22,6 @@ export interface TripDataPoint {
 export interface Cluster {
   centroid: number;
   points: TripDataPoint[];
-  avgFare: number;
   avgDuration: number;
   avgSpeed: number;
   count: number;
@@ -159,7 +157,6 @@ export class KMeansClusterer {
 
     for (let i = 0; i < this.k; i++) {
       const clusterPoints: TripDataPoint[] = [];
-      let totalFare = 0;
       let totalDuration = 0;
       let totalSpeed = 0;
 
@@ -167,7 +164,6 @@ export class KMeansClusterer {
       for (let j = 0; j < data.length; j++) {
         if (assignments[j] === i) {
           clusterPoints.push(data[j]);
-          totalFare += data[j].fare;
           totalDuration += data[j].duration;
           totalSpeed += data[j].speed;
         }
@@ -178,7 +174,6 @@ export class KMeansClusterer {
       clusters.push({
         centroid: centroids[i],
         points: clusterPoints,
-        avgFare: count > 0 ? totalFare / count : 0,
         avgDuration: count > 0 ? totalDuration / count : 0,
         avgSpeed: count > 0 ? totalSpeed / count : 0,
         count: count

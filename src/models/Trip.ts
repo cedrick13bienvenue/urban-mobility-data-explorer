@@ -1,30 +1,31 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 
-// Trip attributes interface
+// Trip attributes interface matching the actual dataset
 interface TripAttributes {
   id: number;
+  tripId: string; // Original ID from dataset
+  vendorId: number;
   pickupDatetime: Date;
   dropoffDatetime: Date;
+  passengerCount: number;
   pickupLongitude: number;
   pickupLatitude: number;
   dropoffLongitude: number;
   dropoffLatitude: number;
-  passengerCount: number;
-  tripDistance: number;
-  fareAmount: number;
-  tipAmount: number;
-  totalAmount: number;
-  paymentType: number;
+  storeAndFwdFlag: string;
+  tripDuration: number; // Trip duration in seconds from dataset
   
   // Derived features
   tripDurationMinutes: number;
+  tripDistance: number; // Calculated using Haversine formula
   tripSpeedKmh: number;
-  farePerKm: number;
-  tipPercentage: number;
   hourOfDay: number;
   dayOfWeek: number;
   isWeekend: boolean;
+  monthOfYear: number;
+  isRushHour: boolean;
+  tripCategory: string; // 'short', 'medium', 'long' based on distance
   
   createdAt?: Date;
   updatedAt?: Date;
@@ -36,26 +37,27 @@ interface TripCreationAttributes extends Optional<TripAttributes, 'id'> {}
 // Trip model class
 class Trip extends Model<TripAttributes, TripCreationAttributes> implements TripAttributes {
   public id!: number;
+  public tripId!: string;
+  public vendorId!: number;
   public pickupDatetime!: Date;
   public dropoffDatetime!: Date;
+  public passengerCount!: number;
   public pickupLongitude!: number;
   public pickupLatitude!: number;
   public dropoffLongitude!: number;
   public dropoffLatitude!: number;
-  public passengerCount!: number;
-  public tripDistance!: number;
-  public fareAmount!: number;
-  public tipAmount!: number;
-  public totalAmount!: number;
-  public paymentType!: number;
+  public storeAndFwdFlag!: string;
+  public tripDuration!: number;
   
   public tripDurationMinutes!: number;
+  public tripDistance!: number;
   public tripSpeedKmh!: number;
-  public farePerKm!: number;
-  public tipPercentage!: number;
   public hourOfDay!: number;
   public dayOfWeek!: number;
   public isWeekend!: boolean;
+  public monthOfYear!: number;
+  public isRushHour!: boolean;
+  public tripCategory!: string;
   
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -69,6 +71,17 @@ Trip.init(
       autoIncrement: true,
       primaryKey: true,
     },
+    tripId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      field: 'trip_id',
+    },
+    vendorId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'vendor_id',
+    },
     pickupDatetime: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -78,6 +91,11 @@ Trip.init(
       type: DataTypes.DATE,
       allowNull: false,
       field: 'dropoff_datetime',
+    },
+    passengerCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'passenger_count',
     },
     pickupLongitude: {
       type: DataTypes.FLOAT,
@@ -99,35 +117,15 @@ Trip.init(
       allowNull: false,
       field: 'dropoff_latitude',
     },
-    passengerCount: {
+    storeAndFwdFlag: {
+      type: DataTypes.STRING(1),
+      allowNull: false,
+      field: 'store_and_fwd_flag',
+    },
+    tripDuration: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'passenger_count',
-    },
-    tripDistance: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'trip_distance',
-    },
-    fareAmount: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'fare_amount',
-    },
-    tipAmount: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'tip_amount',
-    },
-    totalAmount: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'total_amount',
-    },
-    paymentType: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'payment_type',
+      field: 'trip_duration',
     },
     
     // Derived features
@@ -136,20 +134,15 @@ Trip.init(
       allowNull: false,
       field: 'trip_duration_minutes',
     },
+    tripDistance: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      field: 'trip_distance',
+    },
     tripSpeedKmh: {
       type: DataTypes.FLOAT,
       allowNull: false,
       field: 'trip_speed_kmh',
-    },
-    farePerKm: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'fare_per_km',
-    },
-    tipPercentage: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      field: 'tip_percentage',
     },
     hourOfDay: {
       type: DataTypes.INTEGER,
@@ -166,18 +159,38 @@ Trip.init(
       allowNull: false,
       field: 'is_weekend',
     },
+    monthOfYear: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'month_of_year',
+    },
+    isRushHour: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      field: 'is_rush_hour',
+    },
+    tripCategory: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      field: 'trip_category',
+    },
   },
   {
     sequelize,
     tableName: 'trips',
     indexes: [
+      { fields: ['trip_id'], unique: true },
       { fields: ['pickup_datetime'] },
       { fields: ['dropoff_datetime'] },
       { fields: ['trip_distance'] },
-      { fields: ['fare_amount'] },
+      { fields: ['trip_duration'] },
       { fields: ['hour_of_day'] },
       { fields: ['day_of_week'] },
       { fields: ['is_weekend'] },
+      { fields: ['month_of_year'] },
+      { fields: ['is_rush_hour'] },
+      { fields: ['vendor_id'] },
+      { fields: ['trip_category'] },
     ],
   }
 );

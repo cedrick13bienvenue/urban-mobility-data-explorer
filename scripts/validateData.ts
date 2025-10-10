@@ -29,12 +29,6 @@ async function validateData() {
     });
     logger.info(`Records with invalid speed: ${invalidSpeed} (${(invalidSpeed / totalRecords * 100).toFixed(2)}%)`);
 
-    // Check for negative fares
-    const negativeFare = await Trip.count({
-      where: { fareAmount: { [Op.lt]: 0 } }
-    });
-    logger.info(`Records with negative fare: ${negativeFare} (${(negativeFare / totalRecords * 100).toFixed(2)}%)`);
-
     // Check for zero distance trips
     const zeroDistance = await Trip.count({
       where: { tripDistance: { [Op.lte]: 0 } }
@@ -60,8 +54,14 @@ async function validateData() {
     });
     logger.info(`Records with future dates: ${futureDates} (${(futureDates / totalRecords * 100).toFixed(2)}%)`);
 
+    // Check for invalid trip duration
+    const invalidDuration = await Trip.count({
+      where: { tripDurationMinutes: { [Op.lte]: 0 } }
+    });
+    logger.info(`Records with invalid duration: ${invalidDuration} (${(invalidDuration / totalRecords * 100).toFixed(2)}%)`);
+
     // Calculate data quality score
-    const totalIssues = invalidSpeed + negativeFare + zeroDistance + invalidPassengers + futureDates;
+    const totalIssues = invalidSpeed + zeroDistance + invalidPassengers + futureDates + invalidDuration;
     const qualityScore = ((totalRecords - totalIssues) / totalRecords * 100).toFixed(2);
 
     logger.info('\n=== Validation Summary ===');
@@ -86,10 +86,10 @@ async function validateData() {
     if (sampleTrip) {
       logger.info('\n=== Sample Trip ===');
       logger.info(`Trip ID: ${sampleTrip.id}`);
-      logger.info(`Distance: ${sampleTrip.tripDistance.toFixed(2)} miles`);
-      logger.info(`Fare: $${sampleTrip.fareAmount.toFixed(2)}`);
+      logger.info(`Distance: ${sampleTrip.tripDistance.toFixed(2)} km`);
       logger.info(`Duration: ${sampleTrip.tripDurationMinutes.toFixed(2)} minutes`);
       logger.info(`Speed: ${sampleTrip.tripSpeedKmh.toFixed(2)} km/h`);
+      logger.info(`Passengers: ${sampleTrip.passengerCount}`);
     }
 
     process.exit(0);

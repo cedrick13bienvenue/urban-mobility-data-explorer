@@ -23,13 +23,16 @@ export interface TripQueryParams {
   sortOrder?: 'ASC' | 'DESC';
   minDistance?: number;
   maxDistance?: number;
-  minFare?: number;
-  maxFare?: number;
+  minDuration?: number;
+  maxDuration?: number;
   startDate?: string;
   endDate?: string;
   hourOfDay?: number;
   dayOfWeek?: number;
   isWeekend?: boolean;
+  isRushHour?: boolean;
+  vendorId?: number;
+  tripCategory?: 'short' | 'medium' | 'long';
   minPassengers?: number;
   maxPassengers?: number;
 }
@@ -56,4 +59,12 @@ export interface HealthCheckResponse {
   timestamp: string;
   database?: string;
   uptime?: number;
+  documentation?: string;
+}
+
+export interface MetadataResponse {
+  k?: number;
+  totalPoints?: number;
+  limit?: number;
+  processingTime?: number;
 }
