@@ -11,6 +11,7 @@
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .ts",
     "db:setup": "ts-node scripts/setupDb.ts",
+    "validate-data": "ts-node scripts/validateData.ts",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
