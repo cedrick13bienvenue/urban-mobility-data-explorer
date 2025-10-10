@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import Trip from '../models/Trip';
-import { KMeansClusterer, OutlierDetector, TripDataPoint, Cluster } from '../services/customAlgorithm';
+import { KMeansClusterer, OutlierDetector, TripDataPoint } from '../services/customAlgorithm';
 
 export class TripController {
   /**
@@ -17,13 +17,16 @@ export class TripController {
         sortOrder = 'DESC',
         minDistance,
         maxDistance,
-        minFare,
-        maxFare,
+        minDuration,
+        maxDuration,
         startDate,
         endDate,
         hourOfDay,
         dayOfWeek,
         isWeekend,
+        isRushHour,
+        vendorId,
+        tripCategory,
         minPassengers,
         maxPassengers,
       } = req.query;
@@ -37,10 +40,10 @@ export class TripController {
         if (maxDistance) whereClause.tripDistance[Op.lte] = parseFloat(maxDistance as string);
       }
 
-      if (minFare || maxFare) {
-        whereClause.fareAmount = {};
-        if (minFare) whereClause.fareAmount[Op.gte] = parseFloat(minFare as string);
-        if (maxFare) whereClause.fareAmount[Op.lte] = parseFloat(maxFare as string);
+      if (minDuration || maxDuration) {
+        whereClause.tripDuration = {};
+        if (minDuration) whereClause.tripDuration[Op.gte] = parseInt(minDuration as string);
+        if (maxDuration) whereClause.tripDuration[Op.lte] = parseInt(maxDuration as string);
       }
 
       if (startDate || endDate) {
@@ -49,16 +52,28 @@ export class TripController {
         if (endDate) whereClause.pickupDatetime[Op.lte] = new Date(endDate as string);
       }
 
-      if (hourOfDay) {
+      if (hourOfDay !== undefined) {
         whereClause.hourOfDay = parseInt(hourOfDay as string);
       }
 
-      if (dayOfWeek) {
+      if (dayOfWeek !== undefined) {
         whereClause.dayOfWeek = parseInt(dayOfWeek as string);
       }
 
       if (isWeekend !== undefined) {
         whereClause.isWeekend = isWeekend === 'true';
+      }
+
+      if (isRushHour !== undefined) {
+        whereClause.isRushHour = isRushHour === 'true';
+      }
+
+      if (vendorId !== undefined) {
+        whereClause.vendorId = parseInt(vendorId as string);
+      }
+
+      if (tripCategory !== undefined) {
+        whereClause.tripCategory = tripCategory as string;
       }
 
       if (minPassengers || maxPassengers) {
@@ -124,8 +139,7 @@ export class TripController {
       const trips = await Trip.findAll({
         attributes: [
           'tripDistance',
-          'fareAmount',
-          'tipAmount',
+          'tripDuration',
           'tripDurationMinutes',
           'tripSpeedKmh',
           'passengerCount',
@@ -139,16 +153,12 @@ export class TripController {
 
       // Calculate statistics manually
       let totalDistance = 0;
-      let totalFare = 0;
-      let totalTip = 0;
       let totalDuration = 0;
       let totalSpeed = 0;
       let totalPassengers = 0;
 
       for (let i = 0; i < trips.length; i++) {
         totalDistance += trips[i].tripDistance;
-        totalFare += trips[i].fareAmount;
-        totalTip += trips[i].tipAmount;
         totalDuration += trips[i].tripDurationMinutes;
         totalSpeed += trips[i].tripSpeedKmh;
         totalPassengers += trips[i].passengerCount;
@@ -161,12 +171,9 @@ export class TripController {
         data: {
           totalTrips: count,
           avgDistance: totalDistance / count,
-          avgFare: totalFare / count,
-          avgTip: totalTip / count,
           avgDuration: totalDuration / count,
           avgSpeed: totalSpeed / count,
           avgPassengers: totalPassengers / count,
-          totalRevenue: totalFare + totalTip,
         },
       });
     } catch (error) {
@@ -182,21 +189,20 @@ export class TripController {
   public async getHourlyStats(req: Request, res: Response): Promise<void> {
     try {
       const trips = await Trip.findAll({
-        attributes: ['hourOfDay', 'tripDistance', 'fareAmount', 'tripDurationMinutes'],
+        attributes: ['hourOfDay', 'tripDistance', 'tripDurationMinutes'],
       });
 
       // Group by hour manually
-      const hourlyData: { [key: number]: { count: number; totalDistance: number; totalFare: number; totalDuration: number } } = {};
+      const hourlyData: { [key: number]: { count: number; totalDistance: number; totalDuration: number } } = {};
 
       for (let i = 0; i < 24; i++) {
-        hourlyData[i] = { count: 0, totalDistance: 0, totalFare: 0, totalDuration: 0 };
+        hourlyData[i] = { count: 0, totalDistance: 0, totalDuration: 0 };
       }
 
       for (let i = 0; i < trips.length; i++) {
         const hour = trips[i].hourOfDay;
         hourlyData[hour].count++;
         hourlyData[hour].totalDistance += trips[i].tripDistance;
-        hourlyData[hour].totalFare += trips[i].fareAmount;
         hourlyData[hour].totalDuration += trips[i].tripDurationMinutes;
       }
 
@@ -208,7 +214,6 @@ export class TripController {
           hour,
           tripCount: data.count,
           avgDistance: data.count > 0 ? data.totalDistance / data.count : 0,
-          avgFare: data.count > 0 ? data.totalFare / data.count : 0,
           avgDuration: data.count > 0 ? data.totalDuration / data.count : 0,
         });
       }
@@ -227,23 +232,22 @@ export class TripController {
   public async getDailyStats(req: Request, res: Response): Promise<void> {
     try {
       const trips = await Trip.findAll({
-        attributes: ['dayOfWeek', 'tripDistance', 'fareAmount', 'passengerCount'],
+        attributes: ['dayOfWeek', 'tripDistance', 'passengerCount'],
       });
 
       const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
       // Group by day manually
-      const dailyData: { [key: number]: { count: number; totalDistance: number; totalFare: number; totalPassengers: number } } = {};
+      const dailyData: { [key: number]: { count: number; totalDistance: number; totalPassengers: number } } = {};
 
       for (let i = 0; i < 7; i++) {
-        dailyData[i] = { count: 0, totalDistance: 0, totalFare: 0, totalPassengers: 0 };
+        dailyData[i] = { count: 0, totalDistance: 0, totalPassengers: 0 };
       }
 
       for (let i = 0; i < trips.length; i++) {
         const day = trips[i].dayOfWeek;
         dailyData[day].count++;
         dailyData[day].totalDistance += trips[i].tripDistance;
-        dailyData[day].totalFare += trips[i].fareAmount;
         dailyData[day].totalPassengers += trips[i].passengerCount;
       }
 
@@ -256,7 +260,6 @@ export class TripController {
           dayName: daysOfWeek[day],
           tripCount: data.count,
           avgDistance: data.count > 0 ? data.totalDistance / data.count : 0,
-          avgFare: data.count > 0 ? data.totalFare / data.count : 0,
           avgPassengers: data.count > 0 ? data.totalPassengers / data.count : 0,
         });
       }
@@ -265,6 +268,52 @@ export class TripController {
     } catch (error) {
       console.error('Error fetching daily stats:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch daily statistics' });
+    }
+  }
+
+  /**
+   * GET /api/trips/stats/vendor
+   * Get trip statistics by vendor
+   */
+  public async getVendorStats(req: Request, res: Response): Promise<void> {
+    try {
+      const trips = await Trip.findAll({
+        attributes: ['vendorId', 'tripDistance', 'tripDurationMinutes', 'tripSpeedKmh'],
+      });
+
+      // Group by vendor manually
+      const vendorData: { [key: number]: { count: number; totalDistance: number; totalDuration: number; totalSpeed: number } } = {};
+
+      for (let i = 0; i < trips.length; i++) {
+        const vendorId = trips[i].vendorId;
+        if (!vendorData[vendorId]) {
+          vendorData[vendorId] = { count: 0, totalDistance: 0, totalDuration: 0, totalSpeed: 0 };
+        }
+
+        vendorData[vendorId].count++;
+        vendorData[vendorId].totalDistance += trips[i].tripDistance;
+        vendorData[vendorId].totalDuration += trips[i].tripDurationMinutes;
+        vendorData[vendorId].totalSpeed += trips[i].tripSpeedKmh;
+      }
+
+      // Calculate averages
+      const result = [];
+      for (const vendorId in vendorData) {
+        const data = vendorData[vendorId];
+        result.push({
+          vendorId: parseInt(vendorId),
+          vendorName: this.getVendorName(parseInt(vendorId)),
+          tripCount: data.count,
+          avgDistance: data.totalDistance / data.count,
+          avgDuration: data.totalDuration / data.count,
+          avgSpeed: data.totalSpeed / data.count,
+        });
+      }
+
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error('Error fetching vendor stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch vendor statistics' });
     }
   }
 
@@ -278,7 +327,7 @@ export class TripController {
 
       // Fetch trip data for clustering
       const trips = await Trip.findAll({
-        attributes: ['id', 'tripDistance', 'fareAmount', 'tripDurationMinutes', 'tripSpeedKmh'],
+        attributes: ['id', 'tripDistance', 'tripDurationMinutes', 'tripSpeedKmh'],
         limit: parseInt(limit as string),
       });
 
@@ -291,7 +340,6 @@ export class TripController {
       const dataPoints: TripDataPoint[] = trips.map(trip => ({
         id: trip.id,
         distance: trip.tripDistance,
-        fare: trip.fareAmount,
         duration: trip.tripDurationMinutes,
         speed: trip.tripSpeedKmh,
       }));
@@ -305,7 +353,6 @@ export class TripController {
         clusterIndex: index,
         centroid: cluster.centroid,
         count: cluster.count,
-        avgFare: cluster.avgFare,
         avgDuration: cluster.avgDuration,
         avgSpeed: cluster.avgSpeed,
         label: this.getClusterLabel(cluster.centroid),
@@ -327,12 +374,12 @@ export class TripController {
 
   /**
    * GET /api/trips/analysis/outliers
-   * Detect outliers in fare amounts
+   * Detect outliers in trip duration
    */
-  public async detectFareOutliers(req: Request, res: Response): Promise<void> {
+  public async detectDurationOutliers(req: Request, res: Response): Promise<void> {
     try {
       const trips = await Trip.findAll({
-        attributes: ['id', 'fareAmount', 'tripDistance', 'tipAmount'],
+        attributes: ['id', 'tripDuration', 'tripDistance', 'tripDurationMinutes'],
       });
 
       if (trips.length === 0) {
@@ -340,20 +387,20 @@ export class TripController {
         return;
       }
 
-      const fares = trips.map(trip => trip.fareAmount);
+      const durations = trips.map(trip => trip.tripDuration);
 
       const detector = new OutlierDetector();
-      const { outliers, lowerBound, upperBound } = detector.detectOutliers(fares);
+      const { outliers, lowerBound, upperBound } = detector.detectOutliers(durations);
 
-      // Find trips with outlier fares
+      // Find trips with outlier durations
       const outlierTrips = [];
       for (let i = 0; i < trips.length; i++) {
-        if (trips[i].fareAmount < lowerBound || trips[i].fareAmount > upperBound) {
+        if (trips[i].tripDuration < lowerBound || trips[i].tripDuration > upperBound) {
           outlierTrips.push({
             id: trips[i].id,
-            fareAmount: trips[i].fareAmount,
+            tripDuration: trips[i].tripDuration,
             tripDistance: trips[i].tripDistance,
-            tipAmount: trips[i].tipAmount,
+            tripDurationMinutes: trips[i].tripDurationMinutes,
           });
         }
       }
@@ -372,53 +419,6 @@ export class TripController {
     } catch (error) {
       console.error('Error detecting outliers:', error);
       res.status(500).json({ success: false, error: 'Failed to detect outliers' });
-    }
-  }
-
-  /**
-   * GET /api/trips/stats/payment
-   * Get statistics by payment type
-   */
-  public async getPaymentTypeStats(req: Request, res: Response): Promise<void> {
-    try {
-      const trips = await Trip.findAll({
-        attributes: ['paymentType', 'fareAmount', 'tipAmount', 'tripDistance'],
-      });
-
-      // Group by payment type manually
-      const paymentData: { [key: number]: { count: number; totalFare: number; totalTip: number; totalDistance: number } } = {};
-
-      for (let i = 0; i < trips.length; i++) {
-        const paymentType = trips[i].paymentType;
-        if (!paymentData[paymentType]) {
-          paymentData[paymentType] = { count: 0, totalFare: 0, totalTip: 0, totalDistance: 0 };
-        }
-
-        paymentData[paymentType].count++;
-        paymentData[paymentType].totalFare += trips[i].fareAmount;
-        paymentData[paymentType].totalTip += trips[i].tipAmount;
-        paymentData[paymentType].totalDistance += trips[i].tripDistance;
-      }
-
-      // Calculate averages
-      const result = [];
-      for (const paymentType in paymentData) {
-        const data = paymentData[paymentType];
-        result.push({
-          paymentType: parseInt(paymentType),
-          paymentTypeName: this.getPaymentTypeName(parseInt(paymentType)),
-          tripCount: data.count,
-          avgFare: data.totalFare / data.count,
-          avgTip: data.totalTip / data.count,
-          avgDistance: data.totalDistance / data.count,
-          totalRevenue: data.totalFare + data.totalTip,
-        });
-      }
-
-      res.json({ success: true, data: result });
-    } catch (error) {
-      console.error('Error fetching payment stats:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch payment statistics' });
     }
   }
 
@@ -460,15 +460,11 @@ export class TripController {
     return 'Long Distance';
   }
 
-  private getPaymentTypeName(type: number): string {
-    const paymentTypes: { [key: number]: string } = {
-      1: 'Credit Card',
-      2: 'Cash',
-      3: 'No Charge',
-      4: 'Dispute',
-      5: 'Unknown',
-      6: 'Voided Trip',
+  private getVendorName(vendorId: number): string {
+    const vendors: { [key: number]: string } = {
+      1: 'Creative Mobile Technologies',
+      2: 'VeriFone Inc.',
     };
-    return paymentTypes[type] || 'Unknown';
+    return vendors[vendorId] || 'Unknown';
   }
 }

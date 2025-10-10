@@ -1,10 +1,12 @@
 import express, { Application } from "express"
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { connectDatabase } from './config/database';
 import tripRoutes from './routes/tripRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
+import swaggerSpec from './config/swagger';
 
 // Load environment variables
 dotenv.config();
@@ -23,12 +25,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'NYC Taxi API Documentation',
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   res.json({
     success: true,
     message: 'NYC Taxi Trip Data API is running',
     timestamp: new Date().toISOString(),
+    documentation: `http://localhost:${PORT}/api-docs`,
   });
 });
 
@@ -51,6 +66,7 @@ const startServer = async (): Promise<void> => {
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info(`API base URL: http://localhost:${PORT}/api`);
+      logger.info(`API Documentation: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     logger.error('Failed to start server', error as Error);
