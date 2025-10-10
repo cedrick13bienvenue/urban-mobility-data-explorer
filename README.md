@@ -8,49 +8,66 @@ A full-stack enterprise-level application for analyzing New York City taxi trip 
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
 - [Custom Algorithms](#custom-algorithms)
 - [Project Structure](#project-structure)
-- [Dataset Information](#dataset-information)
+- [Database Schema](#database-schema)
+- [Data Processing](#data-processing)
+- [Troubleshooting](#troubleshooting)
 
-## ✨ Features
+## 🚀 Quick Start
 
-- **Data Processing Pipeline**: Clean and process raw NYC taxi trip CSV data
-- **Custom Algorithms**:
-  - K-Means clustering for trip distance analysis (manual implementation)
-  - IQR-based outlier detection (manual QuickSort implementation)
-  - Haversine distance calculation
-- **PostgreSQL Database**: Normalized schema with proper indexing
-- **RESTful API**: Comprehensive endpoints for data querying and analysis
-- **Swagger Documentation**: Interactive API documentation at `/api-docs`
-- **Feature Engineering**: Derived features (speed, distance, time-based patterns, rush hour detection)
-- **Data Validation**: Robust handling of missing values, outliers, and edge cases
-
-## 🛠 Tech Stack
-
-- **Backend**: Node.js with Express.js
-- **Language**: TypeScript
-- **Database**: PostgreSQL
-- **ORM**: Sequelize
-- **Data Processing**: csv-parser
-- **Documentation**: Swagger/OpenAPI 3.0
-
-## 📦 Prerequisites
-
-Before you begin, ensure you have the following installed:
+### Prerequisites
 
 - Node.js (v16 or higher)
 - npm (v8 or higher)
 - PostgreSQL (v12 or higher)
 - Git
 
-## 🚀 Installation
+### Setup (5 minutes)
+
+```bash
+# 1. Clone repository
+git clone <your-github-repo-url>
+cd nyc-taxi-backend
+
+# 2. Install dependencies
+npm install
+
+# 3. Create .env file
+cat > .env << 'EOF'
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=nyc_taxi_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+PORT=3000
+NODE_ENV=development
+DATA_FILE_PATH=./data/train.csv
+LOG_FILE_PATH=./logs/processing.log
+EOF
+
+# 4. Start PostgreSQL
+# macOS: brew services start postgresql
+# Linux: sudo systemctl start postgresql
+# Windows: Start PostgreSQL from Services
+
+# 5. Create database
+psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
+
+# 6. Start server
+npm run dev
+```
+
+The API will be available at `http://localhost:3000` and Swagger docs at `http://localhost:3000/api-docs`.
+
+---
+
+## 📦 Installation
 
 ### 1. Clone the Repository
 
@@ -65,7 +82,7 @@ cd nyc-taxi-backend
 npm install
 ```
 
-### 3. Environment Setup
+### 3. Environment Configuration
 
 Create a `.env` file in the root directory:
 
@@ -75,7 +92,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=nyc_taxi_db
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=postgres
 
 # Server Configuration
 PORT=3000
@@ -86,9 +103,18 @@ DATA_FILE_PATH=./data/train.csv
 LOG_FILE_PATH=./logs/processing.log
 ```
 
+---
+
 ## 💾 Database Setup
 
 ### Install PostgreSQL
+
+**macOS:**
+
+```bash
+brew install postgresql
+brew services start postgresql
+```
 
 **Ubuntu/Debian:**
 
@@ -98,59 +124,89 @@ sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql
 ```
 
-**macOS:**
-
-```bash
-brew install postgresql
-brew services start postgresql
-```
-
 **Windows:**
 Download from [PostgreSQL Official Website](https://www.postgresql.org/download/windows/)
 
-### Create Database
+### Create Database and User
 
 ```bash
-# Access PostgreSQL shell
-sudo -u postgres psql
+# Login to PostgreSQL
+psql -U postgres
 
-# In PostgreSQL shell, run:
+# In the PostgreSQL shell, run:
 CREATE DATABASE nyc_taxi_db;
-CREATE USER your_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE nyc_taxi_db TO your_user;
+CREATE USER backend WITH PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE nyc_taxi_db TO backend;
 \q
 ```
 
+Or use this command directly:
+
+```bash
+psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
+```
+
+---
+
 ## 🏃 Running the Application
 
-### 1. Prepare Your Data
+### Development Mode (with auto-reload)
 
-Place the `train.csv` file in the `data/` directory:
+```bash
+npm run dev
+```
+
+Output:
+
+```
+✓ Database connection established successfully.
+[INFO] Server is running on port 3000
+[INFO] API Documentation: http://localhost:3000/api-docs
+```
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+### Available Scripts
+
+```bash
+# Development server with auto-reload
+npm run dev
+
+# Build TypeScript
+npm run build
+
+# Start production server
+npm start
+
+# Run data processing
+npm run process-data
+
+# Validate data integrity
+npm run validate-data
+
+# TypeScript compiler check
+npm run tsc
+```
+
+---
+
+## 📊 Data Processing Pipeline
+
+### Load NYC Taxi Data
+
+Place your `train.csv` file in the `data/` directory:
 
 ```bash
 mkdir -p data
-# Copy your train.csv file to the data directory
 cp /path/to/train.csv ./data/
 ```
 
-**Dataset Format:**
-Your CSV should have the following columns:
-
-- `id` - Trip identifier
-- `vendor_id` - Vendor ID (1 or 2)
-- `pickup_datetime` - Format: "DD/MM/YYYY HH:mm"
-- `dropoff_datetime` - Format: "DD/MM/YYYY HH:mm"
-- `passenger_count` - Number of passengers (1-6)
-- `pickup_longitude` - Pickup longitude
-- `pickup_latitude` - Pickup latitude
-- `dropoff_longitude` - Dropoff longitude
-- `dropoff_latitude` - Dropoff latitude
-- `store_and_fwd_flag` - Y or N
-- `trip_duration` - Duration in seconds
-
-### 2. Process and Load Data
-
-This script will clean, validate, and load the data into PostgreSQL:
+### Process and Load Data
 
 ```bash
 npm run process-data
@@ -162,63 +218,54 @@ npm run process-data
 === NYC Taxi Data Processing Started ===
 Connecting to database...
 ✓ Database connection established successfully.
-✓ Database models synchronized.
 Starting CSV processing...
 Processed 10000 records...
 Processed 20000 records...
-...
 === Processing Complete ===
-Total records processed: 100000
-Successfully loaded: 95234
-Skipped/Invalid: 4766
-Success rate: 95.23%
-Duration: 45.32 seconds
+Total records processed: 1458644
+Successfully loaded: 1387234
+Skipped/Invalid: 71410
+Success rate: 95.10%
+Duration: 154.23 seconds
 ```
 
-### 3. Start the Server
-
-**Development mode (with auto-reload):**
+### Validate Loaded Data
 
 ```bash
-npm run dev
+npm run validate-data
 ```
 
-**Production mode:**
+Checks data quality and generates a report:
 
-```bash
-npm run build
-npm start
-```
+- Invalid speeds
+- Zero distance trips
+- Invalid passenger counts
+- Future dates
+- Data quality score
 
-The server will start on `http://localhost:3000`
-
-### 4. Verify Installation
-
-Test the health endpoint:
-
-```bash
-curl http://localhost:3000/health
-```
-
-Expected response:
-
-```json
-{
-  "success": true,
-  "message": "NYC Taxi Trip Data API is running",
-  "timestamp": "2024-10-08T10:30:00.000Z",
-  "documentation": "http://localhost:3000/api-docs"
-}
-```
+---
 
 ## 📡 API Documentation
 
-### Interactive Documentation
-
-Access the full Swagger documentation at:
+### Interactive Swagger UI
 
 ```
 http://localhost:3000/api-docs
+```
+
+Access comprehensive interactive API documentation, including request/response examples and test endpoints.
+
+### Health Check
+
+```bash
+curl http://localhost:3000/health
+
+# Response:
+{
+  "success": true,
+  "message": "NYC Taxi Trip Data API is running",
+  "timestamp": "2024-10-08T10:30:00.000Z"
+}
 ```
 
 ### Base URL
@@ -227,46 +274,84 @@ http://localhost:3000/api-docs
 http://localhost:3000/api
 ```
 
-### Key Endpoints
+### Trips Endpoints
 
-#### 1. Get All Trips (with filtering and pagination)
+#### Get All Trips (with filtering and pagination)
 
-```
+```bash
 GET /api/trips
 ```
 
 **Query Parameters:**
 
-- `page` (default: 1) - Page number
-- `limit` (default: 50) - Results per page
-- `sortBy` (default: pickupDatetime) - Field to sort by
-- `sortOrder` (default: DESC) - ASC or DESC
-- `minDistance` / `maxDistance` - Distance range in km
-- `minDuration` / `maxDuration` - Duration range in seconds
-- `startDate` / `endDate` - Date range (ISO format)
-- `hourOfDay` (0-23) - Filter by hour
-- `dayOfWeek` (0-6) - Filter by day (0=Sunday)
-- `isWeekend` (true/false) - Weekend filter
-- `isRushHour` (true/false) - Rush hour filter
-- `vendorId` (1 or 2) - Filter by vendor
-- `tripCategory` (short/medium/long) - Trip category filter
-- `minPassengers` / `maxPassengers` - Passenger count range
+| Parameter     | Type    | Default        | Description                        |
+| ------------- | ------- | -------------- | ---------------------------------- |
+| page          | integer | 1              | Page number                        |
+| limit         | integer | 50             | Results per page (max 1000)        |
+| sortBy        | string  | pickupDatetime | Field to sort by                   |
+| sortOrder     | string  | DESC           | ASC or DESC                        |
+| minDistance   | number  | -              | Minimum distance (km)              |
+| maxDistance   | number  | -              | Maximum distance (km)              |
+| minDuration   | integer | -              | Minimum duration (seconds)         |
+| maxDuration   | integer | -              | Maximum duration (seconds)         |
+| startDate     | string  | -              | Start date (ISO format)            |
+| endDate       | string  | -              | End date (ISO format)              |
+| hourOfDay     | integer | -              | Hour of day (0-23)                 |
+| dayOfWeek     | integer | -              | Day of week (0=Sunday, 6=Saturday) |
+| isWeekend     | boolean | -              | Weekend filter                     |
+| isRushHour    | boolean | -              | Rush hour filter                   |
+| vendorId      | integer | -              | Vendor ID (1 or 2)                 |
+| tripCategory  | string  | -              | Trip category (short/medium/long)  |
+| minPassengers | integer | -              | Minimum passenger count            |
+| maxPassengers | integer | -              | Maximum passenger count            |
+
+**Examples:**
+
+```bash
+# Get trips during rush hour
+curl "http://localhost:3000/api/trips?isRushHour=true&limit=50"
+
+# Get short distance trips on weekends
+curl "http://localhost:3000/api/trips?tripCategory=short&isWeekend=true"
+
+# Get trips by specific vendor
+curl "http://localhost:3000/api/trips?vendorId=1&limit=100"
+
+# Combined filters
+curl "http://localhost:3000/api/trips?minDistance=5&maxDistance=10&hourOfDay=17&limit=50"
+```
+
+#### Get Single Trip
+
+```bash
+GET /api/trips/:id
+```
 
 **Example:**
 
 ```bash
-curl "http://localhost:3000/api/trips?page=1&limit=10&minDistance=5&isRushHour=true"
+curl http://localhost:3000/api/trips/1
 ```
 
-#### 2. Get Trip by ID
+#### Get Heatmap Data
 
-```
-GET /api/trips/:id
+```bash
+GET /api/trips/heatmap?limit=5000
 ```
 
-#### 3. Get Overall Statistics
+Returns pickup and dropoff coordinates for map visualization.
 
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/trips/heatmap?limit=1000"
 ```
+
+### Statistics Endpoints
+
+#### Overall Statistics
+
+```bash
 GET /api/trips/stats/summary
 ```
 
@@ -276,42 +361,44 @@ GET /api/trips/stats/summary
 {
   "success": true,
   "data": {
-    "totalTrips": 95234,
-    "avgDistance": 3.45,
-    "avgDuration": 15.8,
-    "avgSpeed": 18.5,
-    "avgPassengers": 1.6
+    "totalTrips": 1387234,
+    "avgDistance": 3.47,
+    "avgDuration": 15.2,
+    "avgSpeed": 18.9,
+    "avgPassengers": 1.58
   }
 }
 ```
 
-#### 4. Get Hourly Statistics
+#### Hourly Statistics
 
-```
+```bash
 GET /api/trips/stats/hourly
 ```
 
-Returns trip statistics grouped by hour of day (0-23).
+Statistics grouped by hour of day (0-23). Useful for visualizing hourly patterns.
 
-#### 5. Get Daily Statistics
+#### Daily Statistics
 
-```
+```bash
 GET /api/trips/stats/daily
 ```
 
-Returns trip statistics grouped by day of week.
+Statistics grouped by day of week. Useful for comparing weekday vs weekend patterns.
 
-#### 6. Get Vendor Statistics
+#### Vendor Statistics
 
-```
+```bash
 GET /api/trips/stats/vendor
 ```
 
-Returns statistics grouped by vendor (1=Creative Mobile Technologies, 2=VeriFone Inc.).
+Statistics grouped by vendor. Useful for vendor comparison analysis.
 
-#### 7. K-Means Clustering Analysis
+### Analysis Endpoints
 
-```
+#### K-Means Clustering
+
+```bash
 GET /api/trips/analysis/clusters?k=3&limit=10000
 ```
 
@@ -333,6 +420,22 @@ GET /api/trips/analysis/clusters?k=3&limit=10000
       "avgDuration": 8.2,
       "avgSpeed": 15.3,
       "label": "Short Distance"
+    },
+    {
+      "clusterIndex": 1,
+      "centroid": 5.5,
+      "count": 3891,
+      "avgDuration": 18.5,
+      "avgSpeed": 17.8,
+      "label": "Medium Distance"
+    },
+    {
+      "clusterIndex": 2,
+      "centroid": 15.3,
+      "count": 1577,
+      "avgDuration": 45.2,
+      "avgSpeed": 20.1,
+      "label": "Long Distance"
     }
   ],
   "metadata": {
@@ -342,13 +445,13 @@ GET /api/trips/analysis/clusters?k=3&limit=10000
 }
 ```
 
-#### 8. Outlier Detection
+#### Outlier Detection
 
-```
+```bash
 GET /api/trips/analysis/outliers
 ```
 
-Detects trip duration outliers using IQR method with manual QuickSort.
+Detects unusual trips using IQR method. Useful for data quality analysis.
 
 **Response:**
 
@@ -361,36 +464,37 @@ Detects trip duration outliers using IQR method with manual QuickSort.
     "outlierPercentage": 2.34,
     "lowerBound": 180,
     "upperBound": 3600,
-    "outlierTrips": [...]
+    "outlierTrips": [
+      {
+        "id": 123,
+        "tripDuration": 5400,
+        "tripDistance": 45.2,
+        "tripDurationMinutes": 90.0
+      }
+    ]
   }
 }
 ```
 
-#### 9. Location Heatmap Data
-
-```
-GET /api/trips/heatmap?limit=5000
-```
-
-Returns pickup and dropoff coordinates for visualization.
+---
 
 ## 🧮 Custom Algorithms
 
-### 1. K-Means Clustering (`src/services/customAlgorithm.ts`)
+### 1. K-Means Clustering
 
-**Purpose**: Group trips into clusters based on distance to identify patterns (short, medium, long trips).
+**Purpose:** Group trips into clusters based on distance to identify patterns.
 
-**Implementation**:
+**Implementation Details:**
 
 - K-means++ initialization for better centroid placement
 - Iterative assignment and centroid update
 - Convergence detection
-- Manual bubble sort for cluster ordering
+- Manual sorting for cluster ordering
 
-**Time Complexity**: O(n × k × iterations)
-**Space Complexity**: O(n + k)
+**Time Complexity:** O(n × k × iterations)
+**Space Complexity:** O(n + k)
 
-**Pseudo-code**:
+**Algorithm Pseudo-code:**
 
 ```
 1. Initialize k centroids using k-means++
@@ -405,31 +509,31 @@ Returns pickup and dropoff coordinates for visualization.
 
 ### 2. Outlier Detection (IQR Method)
 
-**Purpose**: Identify unusual trip durations that may indicate errors or special cases.
+**Purpose:** Identify unusual trip durations.
 
-**Implementation**:
+**Implementation Details:**
 
 - Manual QuickSort for data sorting
 - Quartile calculation (Q1, Q3)
 - IQR = Q3 - Q1
 - Outliers: values < Q1 - 1.5×IQR or > Q3 + 1.5×IQR
 
-**Time Complexity**: O(n log n)
-**Space Complexity**: O(n)
+**Time Complexity:** O(n log n) for sorting
+**Space Complexity:** O(n)
 
 ### 3. Haversine Distance Calculation
 
-**Purpose**: Calculate accurate distances between coordinates on Earth's surface.
+**Purpose:** Calculate accurate distances between GPS coordinates.
 
-**Implementation**: Uses the Haversine formula to compute the great-circle distance between two points.
-
-**Formula**:
+**Formula:**
 
 ```
 a = sin²(Δlat/2) + cos(lat1) × cos(lat2) × sin²(Δlon/2)
 c = 2 × atan2(√a, √(1−a))
-distance = R × c (where R = Earth's radius = 6371 km)
+distance = R × c (where R = 6371 km)
 ```
+
+---
 
 ## 📁 Project Structure
 
@@ -439,37 +543,34 @@ nyc-taxi-backend/
 │   ├── config/
 │   │   ├── database.ts          # Database configuration
 │   │   ├── constants.ts         # Application constants
-│   │   └── swagger.ts           # Swagger configuration
+│   │   └── swagger.ts           # Swagger/OpenAPI config
 │   ├── models/
-│   │   └── Trip.ts              # Trip model with derived features
+│   │   └── Trip.ts              # Trip model definition
 │   ├── services/
 │   │   ├── dataProcessor.ts     # CSV processing & validation
+│   │   ├── analyticsService.ts  # Analytics calculations
 │   │   └── customAlgorithm.ts   # K-Means & outlier detection
 │   ├── routes/
 │   │   └── tripRoutes.ts        # API route definitions
 │   ├── controllers/
-│   │   ├── tripController.ts    # Request handlers
-│   │   └── healthController.ts  # Health check handlers
+│   │   └── tripController.ts    # Request handlers
 │   ├── middleware/
-│   │   ├── errorHandler.ts      # Error handling
-│   │   ├── requestLogger.ts     # Request logging
-│   │   └── validators.ts        # Input validation
+│   │   └── errorHandler.ts      # Error handling
 │   ├── types/
-│   │   ├── api.types.ts         # API type definitions
-│   │   └── trip.types.ts        # Trip type definitions
+│   │   ├── trip.types.ts        # Trip type definitions
+│   │   └── api.types.ts         # API response types
 │   ├── utils/
 │   │   ├── logger.ts            # Logging utility
 │   │   └── helpers.ts           # Helper functions
 │   └── server.ts                # Express app entry point
 ├── scripts/
-│   ├── processAndLoad.ts        # Data processing script
+│   ├── processAndLoad.ts        # Main data processing script
 │   ├── validateData.ts          # Data validation script
-│   └── exportDatabase.ts        # Database export utility
+│   └── setupDb.ts               # Database initialization
 ├── data/
-│   └── train.csv                # Raw dataset (you provide)
+│   └── train.csv                # Raw dataset (user-provided)
 ├── logs/
 │   ├── app.log                  # Application logs
-│   ├── error.log                # Error logs
 │   └── processing.log           # Data processing logs
 ├── .env                         # Environment variables
 ├── .gitignore
@@ -478,148 +579,104 @@ nyc-taxi-backend/
 └── README.md
 ```
 
+---
+
 ## 🗃️ Database Schema
 
 ### Table: `trips`
 
-| Column                | Type      | Description                           | Indexed |
-| --------------------- | --------- | ------------------------------------- | ------- |
-| id                    | INTEGER   | Primary key (auto-increment)          | ✓       |
-| trip_id               | STRING    | Original trip ID from dataset         | ✓       |
-| vendor_id             | INTEGER   | Vendor ID (1 or 2)                    | ✓       |
-| pickup_datetime       | TIMESTAMP | Pickup timestamp                      | ✓       |
-| dropoff_datetime      | TIMESTAMP | Dropoff timestamp                     | ✓       |
-| pickup_longitude      | FLOAT     | Pickup longitude                      |         |
-| pickup_latitude       | FLOAT     | Pickup latitude                       |         |
-| dropoff_longitude     | FLOAT     | Dropoff longitude                     |         |
-| dropoff_latitude      | FLOAT     | Dropoff latitude                      |         |
-| passenger_count       | INTEGER   | Number of passengers (1-6)            |         |
-| store_and_fwd_flag    | STRING(1) | Store and forward flag (Y/N)          |         |
-| trip_duration         | INTEGER   | Trip duration (seconds)               | ✓       |
-| trip_duration_minutes | FLOAT     | **Derived**: Duration in minutes      |         |
-| trip_distance         | FLOAT     | **Derived**: Distance (km, Haversine) | ✓       |
-| trip_speed_kmh        | FLOAT     | **Derived**: Average speed (km/h)     |         |
-| hour_of_day           | INTEGER   | **Derived**: Hour (0-23)              | ✓       |
-| day_of_week           | INTEGER   | **Derived**: Day (0=Sun, 6=Sat)       | ✓       |
-| is_weekend            | BOOLEAN   | **Derived**: Weekend flag             | ✓       |
-| month_of_year         | INTEGER   | **Derived**: Month (1-12)             | ✓       |
-| is_rush_hour          | BOOLEAN   | **Derived**: Rush hour flag           | ✓       |
-| trip_category         | STRING    | **Derived**: short/medium/long        | ✓       |
+| Column                | Type         | Description                         | Indexed |
+| --------------------- | ------------ | ----------------------------------- | ------- |
+| id                    | INTEGER      | Primary key                         | ✓       |
+| trip_id               | VARCHAR(255) | Original trip ID                    | ✓       |
+| vendor_id             | INTEGER      | Vendor (1 or 2)                     | ✓       |
+| pickup_datetime       | TIMESTAMP    | Pickup time                         | ✓       |
+| dropoff_datetime      | TIMESTAMP    | Dropoff time                        | ✓       |
+| pickup_longitude      | FLOAT        | Pickup longitude                    |         |
+| pickup_latitude       | FLOAT        | Pickup latitude                     |         |
+| dropoff_longitude     | FLOAT        | Dropoff longitude                   |         |
+| dropoff_latitude      | FLOAT        | Dropoff latitude                    |         |
+| passenger_count       | INTEGER      | Passenger count (1-6)               |         |
+| store_and_fwd_flag    | VARCHAR(1)   | Store/forward flag (Y/N)            |         |
+| trip_duration         | INTEGER      | Duration in seconds                 | ✓       |
+| trip_duration_minutes | FLOAT        | Duration in minutes (derived)       |         |
+| trip_distance         | FLOAT        | Distance in km (derived, Haversine) | ✓       |
+| trip_speed_kmh        | FLOAT        | Average speed (derived)             |         |
+| hour_of_day           | INTEGER      | Hour 0-23 (derived)                 | ✓       |
+| day_of_week           | INTEGER      | Day 0-6 (derived)                   | ✓       |
+| is_weekend            | BOOLEAN      | Weekend flag (derived)              | ✓       |
+| month_of_year         | INTEGER      | Month 1-12 (derived)                | ✓       |
+| is_rush_hour          | BOOLEAN      | Rush hour flag (derived)            | ✓       |
+| trip_category         | VARCHAR(20)  | short/medium/long (derived)         | ✓       |
+| createdAt             | TIMESTAMP    | Record creation time                |         |
+| updatedAt             | TIMESTAMP    | Record update time                  |         |
 
-**Indexes**: Created on frequently queried fields for optimal performance.
+---
 
-## 📊 Dataset Information
+## 📊 Data Processing
 
-### Data Format
+### CSV Format
 
-The application expects a CSV file with the following structure:
+Expected columns:
 
 ```csv
 id,vendor_id,pickup_datetime,dropoff_datetime,passenger_count,pickup_longitude,pickup_latitude,dropoff_longitude,dropoff_latitude,store_and_fwd_flag,trip_duration
-id2875421,2,14/03/2016 17:24,14/03/2016 17:32,1,-73.98215485,40.767936706542969,-73.96463013,40.765602111816406,N,455
 ```
 
 ### Derived Features
 
-The system calculates three key derived features as required:
+The processor calculates:
 
-1. **Trip Distance (km)**: Calculated using the Haversine formula from pickup/dropoff coordinates
+1. **Trip Distance (km)**: Haversine formula from coordinates
 
-   - Purpose: Accurate distance measurement accounting for Earth's curvature
-   - Range: 0.1 - 100 km (validated)
+   - Range: 0.1-100 km
 
-2. **Trip Speed (km/h)**: Calculated as `(distance / duration) × 3600`
-
-   - Purpose: Identify traffic patterns and detect anomalies
-   - Range: 1 - 120 km/h (validated for city traffic)
-
-3. **Rush Hour Flag**: Boolean indicating if trip started during rush hours
-   - Morning rush: 7:00 AM - 9:00 AM
-   - Evening rush: 4:00 PM - 7:00 PM
-   - Purpose: Analyze traffic patterns and pricing dynamics
-
-Additional derived features:
-
-- **Trip Category**: Categorizes trips as short (<2km), medium (2-10km), or long (>10km)
-- **Time-based features**: Hour of day, day of week, weekend flag, month
-- **Trip Duration (minutes)**: Conversion from seconds for easier analysis
-
-## 🧪 Data Cleaning Logic
-
-The data processor applies the following validations:
-
-1. **Timestamp Validation**:
-
-   - Parses "DD/MM/YYYY HH:mm" format
-   - Ensures valid dates between 2000-2025
-   - Validates dropoff after pickup
-
-2. **Coordinate Validation**:
-
-   - NYC bounding box (40.5-41.0°N, -74.3 to -73.7°W)
-   - Rejects coordinates outside NYC area
-
-3. **Trip Duration**:
-
-   - Range: 1 second to 4 hours (14,400 seconds)
-   - Rejects extremely short or long trips
-
-4. **Passenger Count**:
-
-   - Range: 1-6 passengers
-   - Industry standard validation
-
-5. **Trip Distance**:
-
-   - Range: 0.1-100 km (calculated)
-   - Rejects unrealistic distances
-
-6. **Trip Speed**:
+2. **Trip Speed (km/h)**: distance / duration × 3600
 
    - Range: 1-120 km/h
-   - Excludes physically impossible speeds
 
-7. **Vendor ID**:
+3. **Rush Hour Flag**: Boolean for 7-9 AM and 4-7 PM
+   - Purpose: Traffic pattern analysis
 
-   - Must be 1 or 2
-   - Validates against known vendors
+Additional features:
 
-8. **Store and Forward Flag**:
+- **Trip Category**: short (<2km), medium (2-10km), long (>10km)
+- **Time Features**: hour, day, weekend, month
+- **Trip Duration (minutes)**: converted from seconds
 
-   - Must be 'Y' or 'N'
-   - Data integrity check
+### Data Validation
 
-9. **Duplicate Detection**:
-   - Based on unique trip ID
-   - Prevents data redundancy
+Validations applied to all records:
 
-All rejected records are logged in `logs/processing.log` with detailed reasons.
+- **Timestamps**: Valid dates 2000-2025, dropoff after pickup
+- **Coordinates**: NYC bounding box (40.5-41.0°N, -74.3 to -73.7°W)
+- **Duration**: 1 second to 4 hours
+- **Passengers**: 1-6 people
+- **Vendor**: 1 or 2
+- **Speed/Distance**: Physically realistic values
+- **Duplicates**: Based on unique trip ID
+
+### Processing Performance
+
+- **Speed**: 2,000-5,000 records/second
+- **Batch Size**: 1,000 records per database insert
+- **For 1M+ records**: Typical duration 2-3 minutes
+
+---
 
 ## 🐛 Troubleshooting
 
-### Database Connection Error
+### Database Connection Errors
 
 ```
 Error: connect ECONNREFUSED 127.0.0.1:5432
 ```
 
-**Solution**:
+**Solution:**
 
-- Ensure PostgreSQL is running: `sudo systemctl status postgresql`
-- Verify credentials in `.env` match your PostgreSQL setup
+- Start PostgreSQL: `brew services start postgresql` (macOS) or `sudo systemctl start postgresql` (Linux)
+- Verify `.env` credentials match your PostgreSQL setup
 - Check PostgreSQL is listening on port 5432
-
-### CSV File Not Found
-
-```
-Error: ENOENT: no such file or directory
-```
-
-**Solution**:
-
-- Verify `DATA_FILE_PATH` in `.env` points to the correct file
-- Ensure the `data/` directory exists
-- Check file permissions
 
 ### Port Already in Use
 
@@ -627,16 +684,26 @@ Error: ENOENT: no such file or directory
 Error: listen EADDRINUSE :::3000
 ```
 
-**Solution**:
-
-- Change `PORT` in `.env` or kill the process:
+**Solution:**
 
 ```bash
-# Find process
-lsof -ti:3000
-# Kill process
+# Find and kill process using port 3000
 lsof -ti:3000 | xargs kill -9
 ```
+
+Or change `PORT` in `.env`
+
+### CSV File Not Found
+
+```
+Error: ENOENT: no such file or directory
+```
+
+**Solution:**
+
+- Verify `DATA_FILE_PATH` in `.env`
+- Ensure `data/` directory exists: `mkdir -p data`
+- Check file permissions
 
 ### Date Parsing Errors
 
@@ -644,133 +711,103 @@ lsof -ti:3000 | xargs kill -9
 Invalid date format: pickup=...
 ```
 
-**Solution**:
+**Solution:**
 
-- Ensure CSV dates are in "DD/MM/YYYY HH:mm" format
-- Check for extra spaces or invalid characters
-- Review sample data format in dataset section
+- Verify CSV dates are in "YYYY-MM-DD HH:mm:ss" format
+- Check for extra spaces in date fields
+- Review sample records at top of CSV
 
-### Memory Issues with Large Datasets
-
-**Solution**:
-
-- Increase Node.js memory limit:
+### Memory Issues
 
 ```bash
+# Increase Node.js memory limit
 NODE_OPTIONS="--max-old-space-size=4096" npm run process-data
 ```
 
-- Process data in smaller batches by adjusting `BATCH_SIZE` in script
+### Database is Empty
 
-## 📝 API Usage Examples
-
-### Using cURL
+Check if data was loaded:
 
 ```bash
-# Get all trips from a specific vendor
-curl "http://localhost:3000/api/trips?vendorId=1&limit=10"
+psql -U postgres -d nyc_taxi_db -c "SELECT COUNT(*) FROM trips;"
+```
 
-# Get trips during rush hour on weekdays
-curl "http://localhost:3000/api/trips?isRushHour=true&isWeekend=false"
+If result is 0, run data processing:
 
-# Get long distance trips
-curl "http://localhost:3000/api/trips?tripCategory=long&limit=20"
+```bash
+npm run process-data
+```
+
+---
+
+## 📝 Common Development Tasks
+
+### Test API Endpoints
+
+```bash
+# Get all trips
+curl http://localhost:3000/api/trips?limit=10
+
+# Get summary statistics
+curl http://localhost:3000/api/trips/stats/summary
 
 # Get hourly statistics
-curl "http://localhost:3000/api/trips/stats/hourly"
+curl http://localhost:3000/api/trips/stats/hourly
 
 # Run clustering analysis
-curl "http://localhost:3000/api/trips/analysis/clusters?k=4&limit=5000"
-
-# Detect outliers
-curl "http://localhost:3000/api/trips/analysis/outliers"
+curl "http://localhost:3000/api/trips/analysis/clusters?k=3"
 ```
 
-### Using JavaScript/Fetch
+### Check Logs
 
-```javascript
-// Get trips with filters
-const response = await fetch(
-  "http://localhost:3000/api/trips?minDistance=5&maxDistance=10&isWeekend=true"
-);
-const data = await response.json();
-console.log(data);
+```bash
+# Application logs
+tail -f logs/app.log
 
-// Get clustering analysis
-const clusters = await fetch(
-  "http://localhost:3000/api/trips/analysis/clusters?k=3"
-);
-const clusterData = await clusters.json();
-console.log(clusterData);
+# Processing logs
+tail -f logs/processing.log
 ```
 
-### Using Python
+### Reset Database
 
-```python
-import requests
+```bash
+# Drop and recreate database
+psql -U postgres -c "DROP DATABASE nyc_taxi_db;"
+psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
 
-# Get overall statistics
-response = requests.get('http://localhost:3000/api/trips/stats/summary')
-stats = response.json()
-print(stats)
-
-# Get trips with filters
-params = {
-    'minDistance': 5,
-    'isRushHour': True,
-    'limit': 100
-}
-response = requests.get('http://localhost:3000/api/trips', params=params)
-trips = response.json()
-print(f"Found {len(trips['data'])} trips")
+# Then restart server
+npm run dev
 ```
 
-## 🚀 Performance Optimization
+### Validate Data Quality
 
-The backend implements several optimizations:
+```bash
+npm run validate-data
+```
 
-1. **Database Indexing**: Strategic indexes on frequently queried fields
-2. **Batch Processing**: Data insertion in configurable batches (default: 1000 records)
-3. **Query Pagination**: Prevents memory overflow on large result sets
-4. **Connection Pooling**: PostgreSQL connection pool (max: 10 connections)
-5. **Efficient Algorithms**: Optimized K-Means and QuickSort implementations
+---
 
-**Processing Speed**:
+## 🔒 Security Notes
 
-- Typical: 2,000-5,000 records/second
-- Depends on hardware and batch size
-- For 1M+ records, consider increasing batch size to 5000
-
-## 📈 Insights You Can Derive
-
-Using the API, you can discover:
-
-1. **Peak Hours**: Identify busiest times of day/week
-2. **Distance Patterns**: Cluster analysis reveals trip categories
-3. **Speed Analysis**: Average speeds by time of day and location
-4. **Vendor Comparison**: Performance metrics by vendor
-5. **Weekend vs Weekday**: Travel pattern differences
-6. **Rush Hour Impact**: Traffic congestion effects on trip duration
-7. **Anomaly Detection**: Identify unusual trips via outlier detection
-8. **Seasonal Trends**: Monthly patterns in taxi usage
-
-## 🔒 Security Considerations
-
-- Environment variables for sensitive data
-- Input validation on all endpoints
-- SQL injection protection via Sequelize ORM
-- CORS enabled (configure for production)
+- Environment variables store sensitive database credentials
+- Input validation on all API endpoints
+- Sequelize ORM prevents SQL injection
 - Error handling prevents information leakage
+- CORS enabled (configure for production)
 
-## 📚 Additional Resources
+---
 
-- [Sequelize Documentation](https://sequelize.org/docs/v6/)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-- [Swagger/OpenAPI Specification](https://swagger.io/specification/)
+## 📚 Resources
+
+- [Express.js Documentation](https://expressjs.com/)
+- [Sequelize ORM](https://sequelize.org/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Haversine Formula Explained](https://en.wikipedia.org/wiki/Haversine_formula)
+- [Swagger/OpenAPI Specification](https://swagger.io/specification/)
+- [Haversine Formula](https://en.wikipedia.org/wiki/Haversine_formula)
 
-## 👥 Team Members
+---
+
+## 👥 Team
 
 - Saad Byiringiro
 - Hannah Tuyishimire
