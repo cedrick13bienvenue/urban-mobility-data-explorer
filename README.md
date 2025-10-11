@@ -1,4 +1,4 @@
-# NYC Taxi Trip Data Explorer - Backend
+# Urban Mobility Data Explorer
 
 A full-stack enterprise-level application for analyzing New York City taxi trip data with advanced data processing, custom algorithms, and comprehensive RESTful API with Swagger documentation.
 
@@ -19,7 +19,7 @@ A full-stack enterprise-level application for analyzing New York City taxi trip 
 - [Data Processing](#data-processing)
 - [Troubleshooting](#troubleshooting)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -67,7 +67,7 @@ The API will be available at `http://localhost:3000` and Swagger docs at `http:/
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### 1. Clone the Repository
 
@@ -148,7 +148,7 @@ psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
 
 ---
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Development Mode (with auto-reload)
 
