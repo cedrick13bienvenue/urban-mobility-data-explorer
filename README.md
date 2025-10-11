@@ -4,9 +4,9 @@ A full-stack enterprise-level application for analyzing New York City taxi trip 
 
 ## 🎥 Video Walkthrough
 
-[Insert your video link here]
+[Walkthrough video link]
 
-## 📋 Table of Contents
+## Contents
 
 - [Quick Start](#quick-start)
 - [Installation](#installation)
@@ -105,7 +105,7 @@ LOG_FILE_PATH=./logs/processing.log
 
 ---
 
-## 💾 Database Setup
+## Database Setup
 
 ### Install PostgreSQL
 
@@ -195,7 +195,7 @@ npm run tsc
 
 ---
 
-## 📊 Data Processing Pipeline
+## Data Processing Pipeline
 
 ### Load NYC Taxi Data
 
@@ -245,7 +245,7 @@ Checks data quality and generates a report:
 
 ---
 
-## 📡 API Documentation
+## API Documentation
 
 ### Interactive Swagger UI
 
@@ -478,7 +478,7 @@ Detects unusual trips using IQR method. Useful for data quality analysis.
 
 ---
 
-## 🧮 Custom Algorithms
+## Custom Algorithms
 
 ### 1. K-Means Clustering
 
@@ -535,7 +535,7 @@ distance = R × c (where R = 6371 km)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 nyc-taxi-backend/
@@ -581,7 +581,7 @@ nyc-taxi-backend/
 
 ---
 
-## 🗃️ Database Schema
+## Database Schema
 
 ### Table: `trips`
 
@@ -613,7 +613,7 @@ nyc-taxi-backend/
 
 ---
 
-## 📊 Data Processing
+## Data Processing
 
 ### CSV Format
 
@@ -664,7 +664,7 @@ Validations applied to all records:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Database Connection Errors
 
@@ -674,7 +674,7 @@ Error: connect ECONNREFUSED 127.0.0.1:5432
 
 **Solution:**
 
-- Start PostgreSQL: `brew services start postgresql` (macOS) or `sudo systemctl start postgresql` (Linux)
+- Start PostgreSQL: `brew services start postgresql` (macOS), `sudo systemctl start postgresql` (Linux), or `net start postgresql-x64-14` (Windows as Administrator)
 - Verify `.env` credentials match your PostgreSQL setup
 - Check PostgreSQL is listening on port 5432
 
@@ -740,7 +740,7 @@ npm run process-data
 
 ---
 
-## 📝 Common Development Tasks
+## Common Development Tasks
 
 ### Test API Endpoints
 
@@ -787,7 +787,7 @@ npm run validate-data
 
 ---
 
-## 🔒 Security Notes
+## Security Notes
 
 - Environment variables store sensitive database credentials
 - Input validation on all API endpoints
@@ -797,7 +797,7 @@ npm run validate-data
 
 ---
 
-## 📚 Resources
+## Resources
 
 - [Express.js Documentation](https://expressjs.com/)
 - [Sequelize ORM](https://sequelize.org/)
