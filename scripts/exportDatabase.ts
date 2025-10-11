@@ -18,12 +18,12 @@ async function exportDatabase() {
   console.log(`User: ${DB_USER}`);
   console.log(`Output: ${OUTPUT_FILE}`);
 
-  // Create exports directory if it doesn't exist
+  // creating exports directory if it doesn't exist
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
-  // Build pg_dump command
+  // building pg_dump command
   const command = `PGPASSWORD=${process.env.DB_PASSWORD} pg_dump -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -f ${OUTPUT_FILE}`;
 
   exec(command, (error, stdout, stderr) => {
