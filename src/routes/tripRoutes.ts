@@ -143,7 +143,6 @@ const tripController = new TripController();
  */
 router.get('/trips', (req, res) => tripController.getAllTrips(req, res));
 
-// ===== SPECIFIC ROUTES (must come BEFORE parameterized routes) =====
 
 /**
  * @swagger
@@ -428,7 +427,6 @@ router.get('/trips/analysis/clusters', (req, res) => tripController.getDistanceC
  */
 router.get('/trips/analysis/outliers', (req, res) => tripController.detectDurationOutliers(req, res));
 
-// ===== GENERIC ROUTES (must come AFTER specific routes) =====
 
 /**
  * @swagger
