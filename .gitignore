@@ -3,10 +3,6 @@ node_modules/
 package-lock.json
 
 # Environment variables
-.env
-.env.local
-.env.development
-.env.production
 
 # Logs
 logs/
@@ -51,3 +47,4 @@ temp/
 
 # TypeScript
 *.tsbuildinfo
+config.bat
