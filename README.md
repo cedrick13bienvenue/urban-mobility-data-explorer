@@ -101,52 +101,80 @@ cd backend
 npm install
 ```
 
-### 3. Environment Setup
+### 3. **⚠️ IMPORTANT: Add Dataset File**
+
+**Before proceeding with database setup, you MUST add the dataset:**
+
+1. Download the NYC Taxi Trip dataset (`train.csv`)
+2. Place it in the `backend/data/` directory
+
+```bash
+# Your directory structure should look like:
+backend/
+├── data/
+│   └── train.csv          # ← Place your dataset here
+├── src/
+├── scripts/
+└── package.json
+```
+
+**Without the `train.csv` file, the data loading step will fail!**
+
+### 4. Environment Setup
 
 **⚠️ Important: Update these values for your setup:**
 
-| Variable      | Default Value   | Where to Change | Description                                  |
-| ------------- | --------------- | --------------- | -------------------------------------------- |
-| `DB_HOST`     | `localhost`     | `backend/.env`  | PostgreSQL server host                       |
-| `DB_PORT`     | `5432`          | `backend/.env`  | PostgreSQL server port                       |
-| `DB_NAME`     | `nyc_taxi_db`   | `backend/.env`  | Database name                                |
-| `DB_USER`     | `postgres`      | `backend/.env`  | Database username                            |
-| `DB_PASSWORD` | `your_password` | `backend/.env`  | **⚠️ Change this!** Your PostgreSQL password |
-| `PORT`        | `3000`          | `backend/.env`  | Backend server port                          |
-
-**Configuration Files to Update:**
-
-1. **`backend/src/config/database.ts`** - Database connection settings
-
-   ```typescript
-   // Default values (can be overridden by .env)
-   host: process.env.DB_HOST || 'localhost',
-   port: parseInt(process.env.DB_PORT || '5432'),
-   database: process.env.DB_NAME || 'nyc_taxi_db',
-   username: process.env.DB_USER || 'postgres',
-   password: process.env.DB_PASSWORD || '',
-   ```
-
-2. **`backend/scripts/setupDb.ts`** - Database setup script
-   ```typescript
-   // These values are read from .env file
-   const DB_HOST = process.env.DB_HOST || "localhost";
-   const DB_PORT = parseInt(process.env.DB_PORT || "5432");
-   const DB_NAME = process.env.DB_NAME || "nyc_taxi_db";
-   const DB_USER = process.env.DB_USER || "postgres";
-   const DB_PASSWORD = process.env.DB_PASSWORD || "";
-   ```
-
-### 4. Database Setup
+Create a `.env` file in the `backend/` directory:
 
 ```bash
-# Start PostgreSQL service
-# macOS: brew services start postgresql
-# Linux: sudo systemctl start postgresql
+cd backend
+touch .env
+```
+
+Add the following configuration to `backend/.env`:
+
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=nyc_taxi_db
+DB_USER=postgres
+DB_PASSWORD=your_password        # ⚠️ CHANGE THIS to your PostgreSQL password
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Data Processing
+DATA_FILE_PATH=./data/train.csv  # Path to your dataset
+LOG_FILE_PATH=./logs/processing.log
+```
+
+**Configuration Variables:**
+
+| Variable         | Default Value           | Description                                  |
+| ---------------- | ----------------------- | -------------------------------------------- |
+| `DB_HOST`        | `localhost`             | PostgreSQL server host                       |
+| `DB_PORT`        | `5432`                  | PostgreSQL server port                       |
+| `DB_NAME`        | `nyc_taxi_db`           | Database name                                |
+| `DB_USER`        | `postgres`              | Database username                            |
+| `DB_PASSWORD`    | `your_password`         | **⚠️ Change this!** Your PostgreSQL password |
+| `PORT`           | `3000`                  | Backend server port                          |
+| `DATA_FILE_PATH` | `./data/train.csv`      | Path to your CSV dataset                     |
+| `LOG_FILE_PATH`  | `./logs/processing.log` | Path for processing logs                     |
+
+### 5. Database Setup
+
+```bash
+# Make sure you're in the backend directory
+cd backend
+
+# Start PostgreSQL service (if not already running)
+# macOS:   brew services start postgresql
+# Linux:   sudo systemctl start postgresql
 # Windows: net start postgresql-x64-14
 
-# Automated database and table setup
-cd backend
+# Run automated database setup
 npm run db:setup
 ```
 
@@ -156,13 +184,70 @@ npm run db:setup
 - ✅ Creates database `nyc_taxi_db` if it doesn't exist
 - ✅ Creates all required tables with proper indexes
 - ✅ Sets up the complete database schema
-- ✅ Provides next steps guidance
 
-### 5. Load Data
+**Expected Output:**
+
+```
+🚀 Starting database setup...
+📊 Target database: nyc_taxi_db
+🏠 Host: localhost:5432
+👤 User: postgres
+✓ Connected to PostgreSQL server
+✓ Database 'nyc_taxi_db' already exists
+✓ Connected to target database
+📝 Creating tables...
+✓ Tables created successfully
+
+🎉 Database setup completed successfully!
+📋 Next steps:
+   1. Run "npm run process-data" to load CSV data
+   2. Run "npm run dev" to start the server
+```
+
+### 6. Load Data
+
+**⚠️ Make sure `train.csv` is in the `backend/data/` directory before running this step!**
 
 ```bash
-# Process and load CSV data
+# Process and load CSV data into the database
 npm run process-data
+```
+
+**What this does:**
+
+- ✅ Reads the `train.csv` file from `backend/data/`
+- ✅ Validates and cleans the data
+- ✅ Calculates derived features (distance, speed, time categories)
+- ✅ Loads data into PostgreSQL in batches
+- ✅ Creates detailed processing logs
+
+**Expected Output:**
+
+```
+=== NYC Taxi Data Processing Started ===
+Data file: ./data/train.csv
+Connecting to database...
+✓ Database connection established successfully.
+Initializing data processor...
+Starting CSV processing...
+
+Processing: [████████████████████] 100% | 1458644/1458644 records
+
+=== Processing Complete ===
+Total records processed: 1458644
+Successfully loaded: 1458644
+Skipped/Invalid: 0
+Success rate: 100.00%
+Duration: 120.45 seconds
+Processing speed: 12109.23 records/second
+
+✓ Data processing and loading completed successfully!
+```
+
+**Optional: Validate Data**
+
+```bash
+npm run validate-data
 ```
 
 ### 6. Frontend Configuration (Optional)
