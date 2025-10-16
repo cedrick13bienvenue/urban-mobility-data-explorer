@@ -205,7 +205,6 @@ cd frontend
 
 ### 7. Access the Application
 
-- **Frontend Dashboard**: `http://localhost:8000`
 - **Backend API**: `http://localhost:3000`
 - **API Documentation**: `http://localhost:3000/api-docs`
 
