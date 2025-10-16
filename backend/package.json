@@ -3,20 +3,27 @@
   "version": "1.0.0",
   "description": "NYC Taxi Trip Data Explorer - Backend API",
   "main": "dist/server.js",
+  
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "process-data": "ts-node scripts/processAndLoad.ts",
-    "clean": "rm -rf dist",
-    "lint": "eslint . --ext .ts",
+    
+    "db:create": "ts-node scripts/createDb.ts",
     "db:setup": "ts-node scripts/setupDb.ts",
-    "db:create": "ts-node scripts/setupDb.ts",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:migrate:undo": "npx sequelize-cli db:migrate:undo",
     "db:migrate:status": "npx sequelize-cli db:migrate:status",
+    "db:migrate:create": "npx sequelize-cli migration:generate --name",
+    "db:drop": "npx sequelize-cli db:drop",
+    "db:reset": "npm run db:drop && npm run db:setup",
+    
+    "process-data": "ts-node scripts/processAndLoad.ts",
     "validate-data": "ts-node scripts/validateData.ts",
+    "export-db": "ts-node scripts/exportDb.ts",
+    
     "setup": "npm run db:setup && npm run process-data",
+    "clean": "rm -rf dist",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
