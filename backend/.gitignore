@@ -19,11 +19,6 @@ yarn-error.log*
 dist/
 build/
 
-# Data files
-data/
-*.csv
-*.xlsx
-*.xls
 
 # Database dumps
 *.sql
