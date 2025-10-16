@@ -37,15 +37,15 @@ app.get('/api-docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'NYC Taxi Trip Data API is running',
-    timestamp: new Date().toISOString(),
-    documentation: `http://localhost:${PORT}/api-docs`,
-  });
-});
+// // Health check route
+// app.get('/health', (req, res) => {
+//   res.json({
+//     success: true,
+//     message: 'NYC Taxi Trip Data API is running',
+//     timestamp: new Date().toISOString(),
+//     documentation: `http://localhost:${PORT}/api-docs`,
+//   });
+// });
 
 // API routes
 app.use('/api', tripRoutes);
@@ -64,7 +64,7 @@ const startServer = async (): Promise<void> => {
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`Health check: http://localhost:${PORT}/health`);
+      // logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info(`API base URL: http://localhost:${PORT}/api`);
       logger.info(`API Documentation: http://localhost:${PORT}/api-docs`);
     });
