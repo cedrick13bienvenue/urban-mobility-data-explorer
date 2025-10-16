@@ -47,17 +47,18 @@ async function createDatabaseIfNotExists() {
 }
 
 async function setupTables() {
-  // Import after database is created
-  const { connectDatabase } = await import("../src/config/database");
-  const sequelize = (await import("../src/config/database")).default;
-
   try {
-    await connectDatabase();
+    // Import after database is created
+    const sequelize = (await import("../src/config/database")).default;
+    
+    // Import models to ensure they're registered
+    await import("../src/models/Trip");
+
     console.log("✓ Connected to target database");
 
     // Sync models to create tables
     console.log("📝 Creating tables...");
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ force: false, alter: false });
     console.log("✓ Tables created successfully");
 
     await sequelize.close();
@@ -77,10 +78,10 @@ async function setupDatabase() {
     // Step 1: Create database if it doesn't exist
     await createDatabaseIfNotExists();
 
-    // Step 2: Create tables
+    // Step 2: Create tables using sequelize.sync()
     await setupTables();
 
-    console.log("🎉 Database setup completed successfully!");
+    console.log("\n🎉 Database setup completed successfully!");
     console.log("📋 Next steps:");
     console.log('   1. Run "npm run process-data" to load CSV data');
     console.log('   2. Run "npm run dev" to start the server');
