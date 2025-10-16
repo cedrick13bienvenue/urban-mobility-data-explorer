@@ -54,14 +54,22 @@ EOF
 # Linux: sudo systemctl start postgresql
 # Windows: net start postgresql-x64-14 (as Administrator)
 
-# Create database
-psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
+# Automated database and table setup
+npm run db:setup
 ```
+
+**What `npm run db:setup` does:**
+
+- ✅ Connects to PostgreSQL server
+- ✅ Creates database `nyc_taxi_db` if it doesn't exist
+- ✅ Creates all required tables with proper indexes
+- ✅ Sets up the complete database schema
+- ✅ Provides next steps guidance
 
 ### Run Application
 
 ```bash
-# Process data
+# Process data (after database setup)
 npm run process-data
 
 # Start server
@@ -231,8 +239,14 @@ cp /path/to/train.csv ./data/
 npm run dev              # Development server
 npm run build            # Build TypeScript
 npm start                # Production server
+npm run db:setup         # Create database and tables
+npm run db:create        # Alias for db:setup
+npm run db:migrate       # Run Sequelize migrations
+npm run db:migrate:undo  # Undo last migration
+npm run db:migrate:status # Check migration status
 npm run process-data     # Load CSV data
 npm run validate-data    # Check data quality
+npm run setup            # Complete setup (db + data)
 ```
 
 ---
