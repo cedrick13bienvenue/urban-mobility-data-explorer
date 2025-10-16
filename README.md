@@ -4,7 +4,7 @@ A full-stack application for analyzing New York City taxi trip data with interac
 
 ## 🎥 Video Walkthrough
 
-[Walkthrough video link]
+[[Walkthrough video link]](https://youtu.be/HTRyP40PnGE)
 
 ## 👥 Team Members
 
