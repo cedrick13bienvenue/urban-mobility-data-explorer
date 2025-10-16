@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Urban Mobility Data Explorer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <i class="fas fa-taxi"></i>
+          <span>Urban Mobility Explorer</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <nav class="nav-menu">
+          <div class="nav-section">
+            <h3>General</h3>
+            <ul>
+              <li class="nav-item active" data-view="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+              </li>
+              <li class="nav-item" data-view="trips">
+                <i class="fas fa-list"></i>
+                <span>All Trips</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <h3>Analysis</h3>
+            <ul>
+              <li class="nav-item" data-view="patterns">
+                <i class="fas fa-clock"></i>
+                <span>Temporal Patterns</span>
+              </li>
+              <li class="nav-item" data-view="clusters">
+                <i class="fas fa-project-diagram"></i>
+                <span>Clustering</span>
+              </li>
+              <li class="nav-item" data-view="outliers">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Outliers</span>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view active">
+          <div class="welcome-section">
+            <h1>Welcome to Urban Mobility Explorer</h1>
+            <p>NYC Taxi Trip Analysis – <span id="current-date"></span></p>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="cards-grid">
+            <!-- Total Trips Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Total Trips</h3>
+                <i class="fas fa-taxi"></i>
+              </div>
+              <div class="card-content">
+                <div class="metric-value" id="totalTrips">-</div>
+                <div class="metric-subtitle">NYC Taxi Trips</div>
+                <div class="metric-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>+12% from last month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Average Distance Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Avg Distance</h3>
+                <i class="fas fa-route"></i>
+              </div>
+              <div class="card-content">
+                <div class="metric-value" id="avgDistance">-</div>
+                <div class="metric-subtitle">Kilometers per trip</div>
+                <div class="metric-trend">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>-2.3% from last month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Average Duration Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Avg Duration</h3>
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="card-content">
+                <div class="metric-value" id="avgDuration">-</div>
+                <div class="metric-subtitle">Minutes per trip</div>
+                <div class="metric-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>+5.1% from last month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Average Speed Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Avg Speed</h3>
+                <i class="fas fa-tachometer-alt"></i>
+              </div>
+              <div class="card-content">
+                <div class="metric-value" id="avgSpeed">-</div>
+                <div class="metric-subtitle">km/h</div>
+                <div class="metric-trend">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>-1.8% from last month</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="charts-section">
+            <!-- Hourly Patterns Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Trip Patterns by Hour</h3>
+                <div class="chart-controls">
+                  <button class="chart-btn active" data-chart="trips">
+                    Trips
+                  </button>
+                  <button class="chart-btn" data-chart="distance">
+                    Distance
+                  </button>
+                  <button class="chart-btn" data-chart="duration">
+                    Duration
+                  </button>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="hourlyChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Daily Patterns Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Weekly Patterns</h3>
+                <div class="chart-controls">
+                  <button class="chart-btn active" data-chart="trips">
+                    Trips
+                  </button>
+                  <button class="chart-btn" data-chart="distance">
+                    Distance
+                  </button>
+                  <button class="chart-btn" data-chart="passengers">
+                    Passengers
+                  </button>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="dailyChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vendor Analysis -->
+          <div class="vendor-section">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Vendor Performance</h3>
+                <div class="chart-controls">
+                  <button class="chart-btn active" data-chart="trips">
+                    Trips
+                  </button>
+                  <button class="chart-btn" data-chart="distance">
+                    Distance
+                  </button>
+                  <button class="chart-btn" data-chart="speed">Speed</button>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="vendorChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trips View -->
+        <div id="trips-view" class="view">
+          <div class="view-header">
+            <h2>Trip Data Explorer</h2>
+            <p>Browse and filter individual trip records</p>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-section">
+            <div class="filter-group">
+              <label>Distance Range (km)</label>
+              <div class="range-inputs">
+                <input
+                  type="number"
+                  id="minDistance"
+                  placeholder="Min"
+                  step="0.1"
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  id="maxDistance"
+                  placeholder="Max"
+                  step="0.1"
+                />
+              </div>
+            </div>
+            <div class="filter-group">
+              <label>Duration Range (min)</label>
+              <div class="range-inputs">
+                <input type="number" id="minDuration" placeholder="Min" />
+                <span>-</span>
+                <input type="number" id="maxDuration" placeholder="Max" />
+              </div>
+            </div>
+            <div class="filter-group">
+              <label>Hour of Day</label>
+              <select id="hourFilter">
+                <option value="">All Hours</option>
+                <option value="0">12 AM</option>
+                <option value="1">1 AM</option>
+                <option value="2">2 AM</option>
+                <option value="3">3 AM</option>
+                <option value="4">4 AM</option>
+                <option value="5">5 AM</option>
+                <option value="6">6 AM</option>
+                <option value="7">7 AM</option>
+                <option value="8">8 AM</option>
+                <option value="9">9 AM</option>
+                <option value="10">10 AM</option>
+                <option value="11">11 AM</option>
+                <option value="12">12 PM</option>
+                <option value="13">1 PM</option>
+                <option value="14">2 PM</option>
+                <option value="15">3 PM</option>
+                <option value="16">4 PM</option>
+                <option value="17">5 PM</option>
+                <option value="18">6 PM</option>
+                <option value="19">7 PM</option>
+                <option value="20">8 PM</option>
+                <option value="21">9 PM</option>
+                <option value="22">10 PM</option>
+                <option value="23">11 PM</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Day of Week</label>
+              <select id="dayFilter">
+                <option value="">All Days</option>
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Vendor</label>
+              <select id="vendorFilter">
+                <option value="">All Vendors</option>
+                <option value="1">Creative Mobile Technologies</option>
+                <option value="2">VeriFone Inc.</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Trip Category</label>
+              <select id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="short">Short Distance</option>
+                <option value="medium">Medium Distance</option>
+                <option value="long">Long Distance</option>
+              </select>
+            </div>
+            <button class="apply-filters-btn" id="applyFilters">
+              Apply Filters
+            </button>
+            <button class="clear-filters-btn" id="clearFilters">
+              Clear All
+            </button>
+          </div>
+
+          <!-- Trips Table -->
+          <div class="table-section">
+            <div class="table-header">
+              <h3>Trip Records</h3>
+              <div class="table-controls">
+                <label for="sortBy">Sort by:</label>
+                <select id="sortBy">
+                  <option value="pickupDatetime">Pickup Time</option>
+                  <option value="tripDistance">Distance</option>
+                  <option value="tripDuration">Duration</option>
+                  <option value="tripSpeedKmh">Speed</option>
+                </select>
+                <select id="sortOrder">
+                  <option value="DESC">Descending</option>
+                  <option value="ASC">Ascending</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container">
+              <table id="tripsTable">
+                <thead>
+                  <tr>
+                    <th>Trip ID</th>
+                    <th>Pickup Time</th>
+                    <th>Distance (km)</th>
+                    <th>Duration (min)</th>
+                    <th>Speed (km/h)</th>
+                    <th>Passengers</th>
+                    <th>Vendor</th>
+                    <th>Category</th>
+                  </tr>
+                </thead>
+                <tbody id="tripsTableBody">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <button id="prevPage" disabled>Previous</button>
+              <span id="pageInfo">Page 1 of 1</span>
+              <button id="nextPage" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patterns View -->
+        <div id="patterns-view" class="view">
+          <div class="view-header">
+            <h2>Temporal Patterns</h2>
+            <p>Analyze trip patterns across different time dimensions</p>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Trip Density Heatmap</h3>
+              <div class="chart-controls">
+                <button class="chart-btn active" data-heatmap="pickup">
+                  Pickup Locations
+                </button>
+                <button class="chart-btn" data-heatmap="dropoff">
+                  Dropoff Locations
+                </button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div id="heatmapContainer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clustering Analysis View -->
+        <div id="clusters-view" class="view">
+          <div class="view-header">
+            <h2>Distance Clustering Analysis</h2>
+            <p>
+              K-means clustering analysis to identify distinct trip distance
+              patterns
+            </p>
+          </div>
+
+          <!-- Cluster Statistics -->
+          <div class="cards-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>Cluster Summary</h3>
+                <i class="fas fa-chart-pie"></i>
+              </div>
+              <div class="card-content">
+                <div id="clusterSummary">
+                  <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading cluster statistics...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Analysis Insights</h3>
+                <i class="fas fa-lightbulb"></i>
+              </div>
+              <div class="card-content">
+                <div id="clusterInsights">
+                  <p>
+                    Clustering helps identify natural groupings in trip
+                    distances
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clustering Controls -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Cluster Configuration</h3>
+              <div class="chart-controls">
+                <label for="clusterK">Number of Clusters:</label>
+                <select id="clusterK">
+                  <option value="3">3 Clusters</option>
+                  <option value="4">4 Clusters</option>
+                  <option value="5">5 Clusters</option>
+                  <option value="6">6 Clusters</option>
+                </select>
+                <button class="chart-btn" id="refreshClusters">
+                  <i class="fas fa-sync-alt"></i>
+                  Refresh Analysis
+                </button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-loading" id="clusteringChartLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading clustering analysis...</p>
+              </div>
+              <canvas id="clustersDetailChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outlier Detection View -->
+        <div id="outliers-view" class="view">
+          <div class="view-header">
+            <h2>Outlier Detection Analysis</h2>
+            <p>
+              Statistical analysis to identify unusual trip durations using IQR
+              method
+            </p>
+          </div>
+
+          <!-- Outlier Statistics -->
+          <div class="cards-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>Outlier Statistics</h3>
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="card-content">
+                <div id="outlierStats">
+                  <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading outlier statistics...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Statistical Bounds</h3>
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="card-content">
+                <div id="statisticalBounds">
+                  <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading statistical bounds...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Analysis Method</h3>
+                <i class="fas fa-calculator"></i>
+              </div>
+              <div class="card-content">
+                <div id="analysisMethod">
+                  <p>
+                    Using Interquartile Range (IQR) with custom QuickSort
+                    implementation
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outlier Analysis Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Duration Distribution Analysis</h3>
+              <div class="chart-controls">
+                <button class="chart-btn" id="refreshOutliers">
+                  <i class="fas fa-sync-alt"></i>
+                  Refresh Analysis
+                </button>
+                <button class="chart-btn" id="showOutlierDetails">
+                  <i class="fas fa-list"></i>
+                  View Outlier Details
+                </button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-loading" id="outlierChartLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading outlier analysis...</p>
+              </div>
+              <canvas id="outliersDetailChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Outlier Details Table -->
+          <div
+            class="table-section"
+            id="outlierDetailsTable"
+            style="display: none"
+          >
+            <div class="table-header">
+              <h3>Outlier Trip Details</h3>
+              <div class="table-controls">
+                <button class="chart-btn" id="hideOutlierDetails">
+                  <i class="fas fa-eye-slash"></i>
+                  Hide Details
+                </button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table id="outlierTripsTable">
+                <thead>
+                  <tr>
+                    <th>Trip ID</th>
+                    <th>Duration (min)</th>
+                    <th>Distance (km)</th>
+                    <th>Speed (km/h)</th>
+                    <th>Category</th>
+                    <th>Reason</th>
+                  </tr>
+                </thead>
+                <tbody id="outlierTripsTableBody">
+                  <!-- Outlier data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading data...</p>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

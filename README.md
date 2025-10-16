@@ -1,247 +1,245 @@
 # Urban Mobility Data Explorer
 
-A full-stack application for analyzing New York City taxi trip data with custom algorithms and RESTful API.
+A full-stack application for analyzing New York City taxi trip data with interactive visualizations, custom algorithms, and RESTful API.
 
 ## 🎥 Video Walkthrough
 
 [Walkthrough video link]
 
-## Team Members
+## 👥 Team Members
 
-- Saad Byiringiro
-- Hannah Tuyishimire
-- Cedrick Bienvenue
+- **Saad Byiringiro**
+- **Hannah Tuyishimire**
+- **Cedrick Bienvenue**
 
 ---
 
-## Quick Start
+## 📋 Table of Contents
 
-### Prerequisites
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
 
-- Node.js (v16+)
-- PostgreSQL (v12+)
-- npm (v8+)
+---
 
-### Installation
+## ✨ Features
+
+### 🎨 Frontend Dashboard
+
+- **Real-time Analytics**: Live charts and statistics
+- **Interactive Filters**: Time, distance, location, vendor filtering
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Modern UI**: Dark theme with orange accents and smooth animations
+- **Data Visualization**: Charts, heatmaps, and statistical summaries
+
+### 🔧 Backend API
+
+- **RESTful Endpoints**: Comprehensive API for all data operations
+- **Swagger Documentation**: Interactive API documentation
+- **Custom Algorithms**: K-Means clustering and IQR outlier detection
+- **Data Processing**: CSV parsing with validation and feature engineering
+- **Performance Optimized**: Efficient queries with proper indexing
+
+### 📊 Data Analysis
+
+- **K-Means Clustering**: Groups trips by distance patterns
+- **Outlier Detection**: Identifies unusual trip durations using IQR method
+- **Haversine Distance**: Accurate GPS distance calculations
+- **Feature Engineering**: Derived metrics like speed, rush hour flags, trip categories
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+- **HTML5** - Semantic markup
+- **CSS3** - Modern styling with flexbox/grid
+- **JavaScript (ES6+)** - Interactive functionality
+- **Chart.js** - Data visualization
+- **Leaflet** - Interactive maps
+- **Font Awesome** - Icons
+
+### Backend
+
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **TypeScript** - Type-safe development
+- **PostgreSQL** - Relational database
+- **Sequelize** - ORM and migrations
+- **Swagger** - API documentation
+
+---
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v16.0.0 or higher)
+- **npm** (v8.0.0 or higher)
+- **PostgreSQL** (v12.0 or higher)
+- **Git** (for cloning the repository)
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
 
 ```bash
-# Clone repository
-git clone <your-repo-url>
+git clone https://github.com/cedrick13bienvenue/urban-mobility-data-explorer.git
 cd urban-mobility-data-explorer
-
-# Install dependencies
-npm install
-
-# Create .env file
-cat > .env << 'EOF'
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=nyc_taxi_db
-DB_USER=postgres
-DB_PASSWORD=postgres
-PORT=3000
-NODE_ENV=development
-DATA_FILE_PATH=./data/train.csv
-LOG_FILE_PATH=./logs/processing.log
-EOF
 ```
 
-### Database Setup
+### 2. Install Dependencies
 
 ```bash
-# Start PostgreSQL
+# Install backend dependencies
+cd backend
+npm install
+```
+
+### 3. Environment Setup
+
+**⚠️ Important: Update these values for your setup:**
+
+| Variable      | Default Value   | Where to Change | Description                                  |
+| ------------- | --------------- | --------------- | -------------------------------------------- |
+| `DB_HOST`     | `localhost`     | `backend/.env`  | PostgreSQL server host                       |
+| `DB_PORT`     | `5432`          | `backend/.env`  | PostgreSQL server port                       |
+| `DB_NAME`     | `nyc_taxi_db`   | `backend/.env`  | Database name                                |
+| `DB_USER`     | `postgres`      | `backend/.env`  | Database username                            |
+| `DB_PASSWORD` | `your_password` | `backend/.env`  | **⚠️ Change this!** Your PostgreSQL password |
+| `PORT`        | `3000`          | `backend/.env`  | Backend server port                          |
+
+**Configuration Files to Update:**
+
+1. **`backend/src/config/database.ts`** - Database connection settings
+
+   ```typescript
+   // Default values (can be overridden by .env)
+   host: process.env.DB_HOST || 'localhost',
+   port: parseInt(process.env.DB_PORT || '5432'),
+   database: process.env.DB_NAME || 'nyc_taxi_db',
+   username: process.env.DB_USER || 'postgres',
+   password: process.env.DB_PASSWORD || '',
+   ```
+
+2. **`backend/scripts/setupDb.ts`** - Database setup script
+   ```typescript
+   // These values are read from .env file
+   const DB_HOST = process.env.DB_HOST || "localhost";
+   const DB_PORT = parseInt(process.env.DB_PORT || "5432");
+   const DB_NAME = process.env.DB_NAME || "nyc_taxi_db";
+   const DB_USER = process.env.DB_USER || "postgres";
+   const DB_PASSWORD = process.env.DB_PASSWORD || "";
+   ```
+
+### 4. Database Setup
+
+```bash
+# Start PostgreSQL service
 # macOS: brew services start postgresql
 # Linux: sudo systemctl start postgresql
-# Windows: net start postgresql-x64-14 (as Administrator)
+# Windows: net start postgresql-x64-14
 
-# Create database
-psql -U postgres -c "CREATE DATABASE nyc_taxi_db;"
+# Automated database and table setup
+cd backend
+npm run db:setup
 ```
 
-### Run Application
+**What `npm run db:setup` does:**
+
+- ✅ Connects to PostgreSQL server
+- ✅ Creates database `nyc_taxi_db` if it doesn't exist
+- ✅ Creates all required tables with proper indexes
+- ✅ Sets up the complete database schema
+- ✅ Provides next steps guidance
+
+### 5. Load Data
 
 ```bash
-# Process data
+# Process and load CSV data
 npm run process-data
+```
 
-# Start server
+### 6. Frontend Configuration (Optional)
+
+The frontend connects to the backend API. If you're running the backend on a different host/port, update the API configuration:
+
+**File: `frontend/js/api.js`**
+
+```javascript
+// Update the base URL if your backend runs on different host/port
+const API_BASE_URL = "http://localhost:3000"; // Change this if needed
+
+// Example for different configurations:
+// const API_BASE_URL = 'http://your-server.com:3000';  // Remote server
+// const API_BASE_URL = 'http://localhost:8080';         // Different port
+```
+
+**File: `frontend/index.html`** (if using different CDN versions)
+
+```html
+<!-- Update these if you need different versions -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+/>
+```
+
+### 7. Start the Application
+
+```bash
+# Start backend server
 npm run dev
+
+# In a new terminal, serve frontend
+cd frontend
+# Open index.html in your browser or use a local server
 ```
 
-Server runs at `http://localhost:3000`  
-API Documentation at `http://localhost:3000/api-docs`
+### 7. Access the Application
+
+- **Backend API**: `http://localhost:3000`
+- **API Documentation**: `http://localhost:3000/api-docs`
 
 ---
 
-## API Endpoints
-
-### Health Check
-
-```bash
-GET /health
-```
-
-### Trips
-
-```bash
-GET /api/trips                    # List trips with filters
-GET /api/trips/:id                # Single trip
-GET /api/trips/heatmap            # Location data
-```
-
-### Statistics
-
-```bash
-GET /api/trips/stats/summary      # Overall statistics
-GET /api/trips/stats/hourly       # Hourly patterns
-GET /api/trips/stats/daily        # Daily patterns
-GET /api/trips/stats/vendor       # Vendor comparison
-```
-
-### Analysis
-
-```bash
-GET /api/trips/analysis/clusters  # K-Means clustering
-GET /api/trips/analysis/outliers  # Outlier detection
-```
-
-### Query Parameters
-
-Common filters: `page`, `limit`, `minDistance`, `maxDistance`, `minDuration`, `maxDuration`, `hourOfDay`, `dayOfWeek`, `isWeekend`, `isRushHour`, `vendorId`, `tripCategory`
-
-**Example:**
-
-```bash
-curl "http://localhost:3000/api/trips?isRushHour=true&limit=50"
-```
-
----
-
-## Custom Algorithms
-
-### K-Means Clustering
-
-- Groups trips by distance patterns
-- Manual implementation with k-means++ initialization
-- Time Complexity: O(n × k × iterations)
-
-### Outlier Detection (IQR)
-
-- Identifies unusual trip durations
-- Manual QuickSort implementation
-- Time Complexity: O(n log n)
-
-### Haversine Distance
-
-- Calculates accurate GPS distances
-- Accounts for Earth's curvature
-
----
-
-## Derived Features
-
-1. **Trip Distance (km)** - Calculated using Haversine formula
-2. **Trip Speed (km/h)** - Derived from distance and duration
-3. **Rush Hour Flag** - Boolean for 7-9 AM and 4-7 PM periods
-
-Additional: Trip category (short/medium/long), time-based features (hour, day, weekend, month)
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 urban-mobility-data-explorer/
-├── src/
-│   ├── config/          # Database & Swagger config
-│   ├── models/          # Trip model
-│   ├── services/        # Data processing & algorithms
-│   ├── controllers/     # Request handlers
-│   ├── routes/          # API routes
-│   ├── middleware/      # Error handling
-│   ├── types/           # TypeScript types
-│   └── utils/           # Helpers & logger
-├── scripts/             # Data processing scripts
-├── data/                # CSV files
-├── logs/                # Application logs
-└── README.md
+├── 📁 backend/                    # Backend API and services
+│   ├── 📁 src/
+│   │   ├── 📁 config/            # Database & Swagger config
+│   │   ├── 📁 models/            # Sequelize models
+│   │   ├── 📁 services/          # Data processing & algorithms
+│   │   ├── 📁 controllers/       # Request handlers
+│   │   ├── 📁 routes/            # API routes
+│   │   ├── 📁 middleware/        # Error handling
+│   │   ├── 📁 types/             # TypeScript types
+│   │   └── 📁 utils/             # Helpers & logger
+│   ├── 📁 scripts/               # Data processing scripts
+│   ├── 📁 data/                  # CSV files
+│   ├── 📁 logs/                  # Application logs
+│   ├── 📄 package.json           # Backend dependencies
+│   └── 📄 README.md              # Backend documentation
+├── 📁 frontend/                   # Frontend dashboard
+│   ├── 📁 js/                    # JavaScript modules
+│   │   ├── 📄 app.js             # Main application logic
+│   │   ├── 📄 api.js             # API communication
+│   │   ├── 📄 charts.js          # Chart management
+│   │   └── 📄 filters.js         # Data filtering
+│   ├── 📄 index.html             # Main HTML file
+│   ├── 📄 styles.css             # CSS styling
+│   └── 📄 README.md              # Frontend documentation
+├── 📄 README.md                   # This file
+└── 📄 .gitignore                 # Git ignore rules
 ```
 
----
-
-## Database Schema
-
-**Table: trips**
-
-Key columns: `trip_id`, `vendor_id`, `pickup_datetime`, `dropoff_datetime`, `passenger_count`, coordinates, `trip_duration`, `trip_distance`, `trip_speed_kmh`, `is_rush_hour`, `trip_category`
-
-Indexes on: `trip_id`, `pickup_datetime`, `trip_distance`, `trip_duration`, `hour_of_day`, `day_of_week`, `is_weekend`, `vendor_id`, `trip_category`
-
----
-
-## Data Processing
-
-### CSV Format
-
-```csv
-id,vendor_id,pickup_datetime,dropoff_datetime,passenger_count,
-pickup_longitude,pickup_latitude,dropoff_longitude,dropoff_latitude,
-store_and_fwd_flag,trip_duration
-```
-
-### Validation Rules
-
-- Coordinates: NYC bounds (40.5-41.0°N, -74.3 to -73.7°W)
-- Duration: 1 second to 4 hours
-- Passengers: 1-6
-- Vendor: 1 or 2
-- Speed: 1-120 km/h
-
----
-
-## Troubleshooting
-
-**Database connection failed:**
-
-```bash
-# Verify PostgreSQL is running
-brew services list | grep postgresql  # macOS
-sudo systemctl status postgresql      # Linux
-Get-Service postgresql*               # Windows PowerShell
-```
-
-**Port in use:**
-
-```bash
-lsof -ti:3000 | xargs kill -9
-```
-
-**CSV not found:**
-
-```bash
-mkdir -p data
-cp /path/to/train.csv ./data/
-```
-
----
-
-## Available Scripts
-
-```bash
-npm run dev              # Development server
-npm run build            # Build TypeScript
-npm start                # Production server
-npm run process-data     # Load CSV data
-npm run validate-data    # Check data quality
-```
-
----
-
-## Technologies
-
-- **Backend:** Node.js, Express, TypeScript
-- **Database:** PostgreSQL with Sequelize ORM
-- **Documentation:** Swagger/OpenAPI 3.0
-- **Data Processing:** Custom algorithms (no ML libraries)
-
----
+**Made with ❤️ by Team Urban Mobility**
