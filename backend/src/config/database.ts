@@ -23,12 +23,6 @@ export const connectDatabase = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
     console.log('✓ Database connection established successfully.');
-    
-    // Only sync if explicitly enabled via environment variable
-    if (process.env.DB_SYNC === 'true') {
-      await sequelize.sync({ alter: false });
-      console.log('✓ Database models synchronized.');
-    }
   } catch (error) {
     console.error('✗ Unable to connect to the database:', error);
     process.exit(1);
