@@ -11,7 +11,12 @@
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .ts",
     "db:setup": "ts-node scripts/setupDb.ts",
+    "db:create": "ts-node scripts/setupDb.ts",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "db:migrate:status": "npx sequelize-cli db:migrate:status",
     "validate-data": "ts-node scripts/validateData.ts",
+    "setup": "npm run db:setup && npm run process-data",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
